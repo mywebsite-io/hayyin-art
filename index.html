@@ -1557,12 +1557,15 @@
       const btn = card.querySelector(".view-details");
       const id = card.getAttribute("data-id");
       btn.addEventListener("click", (e) => { e.stopPropagation(); openModalById(id); });
-      card.addEventListener("click", () => openModalById(id));
+      // REMOVED: card click event to prevent modal opening when clicking delete
+      // The card click is now handled only by the view-details button
+      // This prevents modal from opening when clicking the delete button area
     });
   }
 
   function openModalById(id) {
     const art = artworks.find(a => a.id === id);
+    if (!art) return;
     currentModalArt = art;
     const whatsappNumber = document.getElementById("whatsappText").innerText;
     const cleanNumber = whatsappNumber.replace(/[^0-9+]/g, '');
@@ -1775,7 +1778,7 @@
 
   document.getElementById('saveEditBtn')?.addEventListener('click', saveEdit);
   
-  // LOGIN - with save to localStorage
+  // LOGIN - with new password hayyin1419
   document.getElementById('submitLogin')?.addEventListener('click', () => {
     const user = document.getElementById('loginUser').value;
     const pass = document.getElementById('loginPass').value;
@@ -1851,10 +1854,12 @@
     document.getElementById('karyaFormContainer').classList.add('hidden');
   });
 
-  // Delete/Edit handlers
+  // Delete/Edit handlers with preventDefault to stop modal from opening
   document.addEventListener('click', async (e) => {
+    // Handle delete button
     if (e.target.closest('.delete-btn')) {
       e.stopImmediatePropagation();
+      e.preventDefault();
       const btn = e.target.closest('.delete-btn');
       const dropdown = btn.closest('.dropdown-menu');
       if (dropdown) dropdown.style.display = 'none';
@@ -1873,8 +1878,10 @@
       return;
     }
 
+    // Handle edit button
     if (e.target.closest('.edit-btn')) {
       e.stopImmediatePropagation();
+      e.preventDefault();
       const btn = e.target.closest('.edit-btn');
       const dropdown = btn.closest('.dropdown-menu');
       if (dropdown) dropdown.style.display = 'none';
