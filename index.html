@@ -1160,7 +1160,7 @@
   </div>
 </footer>
 <button class="back-to-top" id="backToTopBtn"><i class="fas fa-arrow-up"></i></button>
-<div class="sync-status" id="syncStatus">💾 Siap</div>
+<div class="sync-status" id="syncStatus">☁️ Cloud Database</div>
 <input type="file" id="photoUpload" accept="image/*">
 <input type="file" id="artworkImageUpload" accept="image/*">
 
@@ -1193,17 +1193,11 @@
     firebaseAvailable = true;
     console.log("Firebase connected");
   } catch (e) {
-    console.warn("Firebase not available, using local storage only", e);
+    console.error("Firebase not available:", e);
     firebaseAvailable = false;
+    document.getElementById('syncStatus').textContent = '⚠️ Firebase Error';
+    document.getElementById('syncStatus').style.backgroundColor = 'rgba(220, 53, 69, 0.8)';
   }
-
-  // Local Storage Keys
-  const STORAGE_KEYS = {
-    ARTWORKS: 'hayyin_artworks',
-    TESTIMONIALS: 'hayyin_testimonials',
-    CONTACT_INFO: 'hayyin_contact_info',
-    ARTIST_PHOTO: 'hayyin_artist_photo'
-  };
 
   let artworks = [];
   let testimonials = [];
@@ -1224,350 +1218,193 @@
       syncStatus.style.backgroundColor = isError ? 'rgba(220, 53, 69, 0.8)' : 'rgba(0,0,0,0.7)';
       setTimeout(() => {
         if (syncStatus.textContent === message) {
-          syncStatus.textContent = '✅ Tersimpan';
-          setTimeout(() => {
-            if (syncStatus.textContent === '✅ Tersimpan') {
-              syncStatus.textContent = '💾 Tersimpan';
-            }
-          }, 2000);
+          syncStatus.textContent = '☁️ Cloud Database';
+          syncStatus.style.backgroundColor = 'rgba(0,0,0,0.7)';
         }
       }, 2000);
     }
   }
 
-  // ==================== LOCAL STORAGE FUNCTIONS ====================
-  function saveToLocalStorage(key, data) {
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-      return true;
-    } catch (e) {
-      console.error('Failed to save to localStorage:', e);
-      return false;
-    }
-  }
-
-  function loadFromLocalStorage(key, defaultValue = []) {
-    try {
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : defaultValue;
-    } catch (e) {
-      console.error('Failed to load from localStorage:', e);
-      return defaultValue;
-    }
-  }
-
-  // ==================== FIREBASE SYNC FUNCTIONS ====================
-  async function syncArtworksToFirebase() {
-    if (!firebaseAvailable) return false;
-    try {
-      const batch = db.batch();
-      const snapshot = await db.collection('artworks').get();
-      snapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-      await batch.commit();
-      
-      for (const art of artworks) {
-        const artData = {
-          title: art.title,
-          artist: art.artist,
-          category: art.category,
-          desc: art.desc,
-          year: art.year || "2025",
-          imageUrl: art.imageUrl || null,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        if (art.id && !art.id.startsWith('local_')) {
-          await db.collection('artworks').doc(art.id).set(artData, { merge: true });
-        } else {
-          const docRef = await db.collection('artworks').add(artData);
-          art.id = docRef.id;
-        }
-      }
-      saveToLocalStorage(STORAGE_KEYS.ARTWORKS, artworks);
-      updateSyncStatus('☁️ Tersimpan ke cloud');
-      return true;
-    } catch (e) {
-      console.error('Sync to Firebase failed:', e);
-      updateSyncStatus('⚠️ Gagal sinkron ke cloud', true);
-      return false;
-    }
-  }
-
-  async function syncTestimonialsToFirebase() {
-    if (!firebaseAvailable) return false;
-    try {
-      const batch = db.batch();
-      const snapshot = await db.collection('testimonials').get();
-      snapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-      await batch.commit();
-      
-      for (const test of testimonials) {
-        const testData = {
-          name: test.name,
-          role: test.role,
-          text: test.text,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        if (test.id && !test.id.startsWith('local_')) {
-          await db.collection('testimonials').doc(test.id).set(testData, { merge: true });
-        } else {
-          const docRef = await db.collection('testimonials').add(testData);
-          test.id = docRef.id;
-        }
-      }
-      saveToLocalStorage(STORAGE_KEYS.TESTIMONIALS, testimonials);
-      return true;
-    } catch (e) {
-      console.error('Sync testimonials to Firebase failed:', e);
-      return false;
-    }
-  }
-
-  async function syncContactInfoToFirebase() {
-    if (!firebaseAvailable) return false;
-    try {
-      const contactInfo = {
-        address: document.getElementById('addressText').innerText,
-        instagram: document.getElementById('instagramText').innerText,
-        whatsapp: document.getElementById('whatsappText').innerText,
-        hours: document.getElementById('hoursText').innerText,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      await db.collection('settings').doc('contactInfo').set(contactInfo, { merge: true });
-      saveToLocalStorage(STORAGE_KEYS.CONTACT_INFO, contactInfo);
-      return true;
-    } catch (e) {
-      console.error('Sync contact info failed:', e);
-      return false;
-    }
-  }
-
-  async function syncArtistPhotoToFirebase(photoUrl) {
-    if (!firebaseAvailable) return false;
-    try {
-      await db.collection('settings').doc('artist').set({ photoUrl, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-      saveToLocalStorage(STORAGE_KEYS.ARTIST_PHOTO, photoUrl);
-      return true;
-    } catch (e) {
-      console.error('Sync artist photo failed:', e);
-      return false;
-    }
-  }
-
-  // ==================== LOAD DATA ====================
+  // ==================== LOAD DATA FROM FIREBASE ====================
   async function loadArtworks() {
-    const localArtworks = loadFromLocalStorage(STORAGE_KEYS.ARTWORKS, []);
-    
-    if (firebaseAvailable) {
-      try {
-        const snapshot = await db.collection('artworks').orderBy('updatedAt', 'desc').get();
-        if (!snapshot.empty) {
-          artworks = [];
-          snapshot.forEach(doc => {
-            artworks.push({ id: doc.id, ...doc.data() });
-          });
-          saveToLocalStorage(STORAGE_KEYS.ARTWORKS, artworks);
-          renderGallery();
-          return;
-        }
-      } catch (e) {
-        console.warn('Firebase load failed, using local storage:', e);
-      }
+    if (!firebaseAvailable) {
+      document.getElementById('galleryGrid').innerHTML = '<div class="empty-gallery"><i class="fas fa-database"></i><p>Firebase tidak tersedia. Periksa koneksi dan konfigurasi.</p></div>';
+      return;
     }
     
-    artworks = localArtworks;
-    renderGallery();
+    try {
+      const snapshot = await db.collection('artworks').orderBy('createdAt', 'desc').get();
+      artworks = [];
+      snapshot.forEach(doc => {
+        artworks.push({ id: doc.id, ...doc.data() });
+      });
+      renderGallery();
+      updateSyncStatus('✓ Data karya dimuat');
+    } catch (error) {
+      console.error('Error loading artworks:', error);
+      updateSyncStatus('⚠️ Gagal memuat karya', true);
+    }
   }
 
   async function loadTestimonials() {
-    const localTestimonials = loadFromLocalStorage(STORAGE_KEYS.TESTIMONIALS, []);
+    if (!firebaseAvailable) return;
     
-    if (firebaseAvailable) {
-      try {
-        const snapshot = await db.collection('testimonials').orderBy('updatedAt', 'desc').get();
-        if (!snapshot.empty) {
-          testimonials = [];
-          snapshot.forEach(doc => {
-            testimonials.push({ id: doc.id, ...doc.data() });
-          });
-          saveToLocalStorage(STORAGE_KEYS.TESTIMONIALS, testimonials);
-          initCarousel();
-          return;
-        }
-      } catch (e) {
-        console.warn('Firebase load testimonials failed:', e);
-      }
+    try {
+      const snapshot = await db.collection('testimonials').orderBy('createdAt', 'desc').get();
+      testimonials = [];
+      snapshot.forEach(doc => {
+        testimonials.push({ id: doc.id, ...doc.data() });
+      });
+      initCarousel();
+      updateSyncStatus('✓ Data testimoni dimuat');
+    } catch (error) {
+      console.error('Error loading testimonials:', error);
+      updateSyncStatus('⚠️ Gagal memuat testimoni', true);
     }
-    
-    testimonials = localTestimonials;
-    initCarousel();
   }
 
   async function loadContactInfo() {
-    const localContact = loadFromLocalStorage(STORAGE_KEYS.CONTACT_INFO, null);
+    if (!firebaseAvailable) return;
     
-    if (firebaseAvailable) {
-      try {
-        const doc = await db.collection('settings').doc('contactInfo').get();
-        if (doc.exists) {
-          const data = doc.data();
-          if (data.address) document.getElementById('addressText').innerText = data.address;
-          if (data.instagram) document.getElementById('instagramText').innerText = data.instagram;
-          if (data.whatsapp) document.getElementById('whatsappText').innerText = data.whatsapp;
-          if (data.hours) document.getElementById('hoursText').innerText = data.hours;
-          saveToLocalStorage(STORAGE_KEYS.CONTACT_INFO, data);
-          updateWhatsAppLinks(data.whatsapp || '+62 821 1234 5678');
-          return;
-        }
-      } catch (e) {
-        console.warn('Firebase load contact failed:', e);
+    try {
+      const doc = await db.collection('settings').doc('contactInfo').get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.address) document.getElementById('addressText').innerText = data.address;
+        if (data.instagram) document.getElementById('instagramText').innerText = data.instagram;
+        if (data.whatsapp) document.getElementById('whatsappText').innerText = data.whatsapp;
+        if (data.hours) document.getElementById('hoursText').innerText = data.hours;
+        updateWhatsAppLinks(data.whatsapp || '+62 821 1234 5678');
       }
-    }
-    
-    if (localContact) {
-      if (localContact.address) document.getElementById('addressText').innerText = localContact.address;
-      if (localContact.instagram) document.getElementById('instagramText').innerText = localContact.instagram;
-      if (localContact.whatsapp) document.getElementById('whatsappText').innerText = localContact.whatsapp;
-      if (localContact.hours) document.getElementById('hoursText').innerText = localContact.hours;
-      updateWhatsAppLinks(localContact.whatsapp || '+62 821 1234 5678');
+    } catch (error) {
+      console.error('Error loading contact info:', error);
     }
   }
 
   async function loadArtistPhoto() {
-    const localPhoto = loadFromLocalStorage(STORAGE_KEYS.ARTIST_PHOTO, null);
-    const artistIconDiv = document.querySelector("#artistIconDiv");
+    if (!firebaseAvailable) return;
     
-    if (firebaseAvailable) {
-      try {
-        const doc = await db.collection('settings').doc('artist').get();
-        if (doc.exists && doc.data().photoUrl) {
-          if (artistIconDiv) {
-            artistIconDiv.innerHTML = `<img src="${doc.data().photoUrl}" alt="Hayyin" style="display: block; width: 100%; height: 100%; object-fit: cover;">`;
-          }
-          saveToLocalStorage(STORAGE_KEYS.ARTIST_PHOTO, doc.data().photoUrl);
-          return;
+    try {
+      const doc = await db.collection('settings').doc('artist').get();
+      if (doc.exists && doc.data().photoUrl) {
+        const artistIconDiv = document.querySelector("#artistIconDiv");
+        if (artistIconDiv) {
+          artistIconDiv.innerHTML = `<img src="${doc.data().photoUrl}" alt="Hayyin" style="display: block; width: 100%; height: 100%; object-fit: cover;">`;
         }
-      } catch (e) {
-        console.warn('Firebase load artist photo failed:', e);
       }
-    }
-    
-    if (localPhoto && artistIconDiv) {
-      artistIconDiv.innerHTML = `<img src="${localPhoto}" alt="Hayyin" style="display: block; width: 100%; height: 100%; object-fit: cover;">`;
+    } catch (error) {
+      console.error('Error loading artist photo:', error);
     }
   }
 
   // ==================== CRUD OPERATIONS ====================
   async function saveArtwork(artworkData, imageFile) {
+    if (!firebaseAvailable) {
+      updateSyncStatus('⚠️ Firebase tidak tersedia', true);
+      return false;
+    }
+    
     let imageUrl = artworkData.imageUrl;
     
     if (imageFile) {
-      if (firebaseAvailable) {
-        try {
-          const storageRef = storage.ref(`artworks/${Date.now()}_${imageFile.name}`);
-          await storageRef.put(imageFile);
-          imageUrl = await storageRef.getDownloadURL();
-        } catch (e) {
-          console.warn('Firebase upload failed, using local base64', e);
-          imageUrl = pendingImageData;
-        }
-      } else {
-        imageUrl = pendingImageData;
+      try {
+        const storageRef = storage.ref(`artworks/${Date.now()}_${imageFile.name}`);
+        await storageRef.put(imageFile);
+        imageUrl = await storageRef.getDownloadURL();
+      } catch (e) {
+        console.error('Image upload failed:', e);
+        updateSyncStatus('⚠️ Gagal upload gambar', true);
+        return false;
       }
     }
     
-    const newArtwork = {
-      id: artworkData.id || 'local_' + Date.now(),
+    const artData = {
       title: artworkData.title,
       artist: artworkData.artist,
       category: artworkData.category,
       desc: artworkData.desc,
       year: artworkData.year || "2025",
-      imageUrl: imageUrl || null
+      imageUrl: imageUrl || null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     
-    if (artworkData.id && !artworkData.id.startsWith('local_')) {
-      const index = artworks.findIndex(a => a.id === artworkData.id);
-      if (index !== -1) {
-        artworks[index] = newArtwork;
+    try {
+      if (artworkData.id) {
+        await db.collection('artworks').doc(artworkData.id).update(artData);
+        updateSyncStatus('✓ Karya diperbarui');
       } else {
-        artworks.push(newArtwork);
+        await db.collection('artworks').add(artData);
+        updateSyncStatus('✓ Karya ditambahkan');
       }
-    } else {
-      artworks.unshift(newArtwork);
-    }
-    
-    saveToLocalStorage(STORAGE_KEYS.ARTWORKS, artworks);
-    renderGallery();
-    updateSyncStatus('💾 Tersimpan lokal');
-    
-    if (firebaseAvailable) {
-      await syncArtworksToFirebase();
+      await loadArtworks();
+      return true;
+    } catch (error) {
+      console.error('Error saving artwork:', error);
+      updateSyncStatus('⚠️ Gagal menyimpan karya', true);
+      return false;
     }
   }
 
   async function deleteArtwork(id) {
-    artworks = artworks.filter(a => a.id !== id);
-    saveToLocalStorage(STORAGE_KEYS.ARTWORKS, artworks);
-    renderGallery();
-    updateSyncStatus('🗑️ Dihapus');
+    if (!firebaseAvailable) return false;
     
-    if (firebaseAvailable && !id.startsWith('local_')) {
-      try {
-        await db.collection('artworks').doc(id).delete();
-      } catch (e) {
-        console.error('Delete from Firebase failed:', e);
-      }
+    try {
+      await db.collection('artworks').doc(id).delete();
+      updateSyncStatus('✓ Karya dihapus');
+      await loadArtworks();
+      return true;
+    } catch (error) {
+      console.error('Error deleting artwork:', error);
+      updateSyncStatus('⚠️ Gagal menghapus karya', true);
+      return false;
     }
   }
 
   async function saveTestimonial(testimonialData) {
-    const newTestimonial = {
-      id: testimonialData.id || 'local_' + Date.now(),
+    if (!firebaseAvailable) return false;
+    
+    const testData = {
       name: testimonialData.name,
       role: testimonialData.role || "Pengunjung Galeri",
-      text: testimonialData.text
+      text: testimonialData.text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     
-    if (testimonialData.id && !testimonialData.id.startsWith('local_')) {
-      const index = testimonials.findIndex(t => t.id === testimonialData.id);
-      if (index !== -1) {
-        testimonials[index] = newTestimonial;
+    try {
+      if (testimonialData.id) {
+        await db.collection('testimonials').doc(testimonialData.id).update(testData);
+        updateSyncStatus('✓ Testimoni diperbarui');
       } else {
-        testimonials.unshift(newTestimonial);
+        await db.collection('testimonials').add(testData);
+        updateSyncStatus('✓ Testimoni ditambahkan');
       }
-    } else {
-      testimonials.unshift(newTestimonial);
-    }
-    
-    saveToLocalStorage(STORAGE_KEYS.TESTIMONIALS, testimonials);
-    initCarousel();
-    updateSyncStatus('💾 Testimoni tersimpan');
-    
-    if (firebaseAvailable) {
-      await syncTestimonialsToFirebase();
+      await loadTestimonials();
+      return true;
+    } catch (error) {
+      console.error('Error saving testimonial:', error);
+      updateSyncStatus('⚠️ Gagal menyimpan testimoni', true);
+      return false;
     }
   }
 
   async function deleteTestimonial(id) {
-    testimonials = testimonials.filter(t => t.id !== id);
-    saveToLocalStorage(STORAGE_KEYS.TESTIMONIALS, testimonials);
-    initCarousel();
-    updateSyncStatus('🗑️ Testimoni dihapus');
+    if (!firebaseAvailable) return false;
     
-    if (firebaseAvailable && !id.startsWith('local_')) {
-      try {
-        await db.collection('testimonials').doc(id).delete();
-      } catch (e) {
-        console.error('Delete testimonial from Firebase failed:', e);
-      }
+    try {
+      await db.collection('testimonials').doc(id).delete();
+      updateSyncStatus('✓ Testimoni dihapus');
+      await loadTestimonials();
+      return true;
+    } catch (error) {
+      console.error('Error deleting testimonial:', error);
+      updateSyncStatus('⚠️ Gagal menghapus testimoni', true);
+      return false;
     }
   }
 
   async function saveContactField(field, value) {
+    if (!firebaseAvailable) return;
+    
     const elements = {
       address: document.getElementById('addressText'),
       instagram: document.getElementById('instagramText'),
@@ -1582,44 +1419,38 @@
       address: document.getElementById('addressText').innerText,
       instagram: document.getElementById('instagramText').innerText,
       whatsapp: document.getElementById('whatsappText').innerText,
-      hours: document.getElementById('hoursText').innerText
+      hours: document.getElementById('hoursText').innerText,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    saveToLocalStorage(STORAGE_KEYS.CONTACT_INFO, contactInfo);
-    updateSyncStatus('💾 Info kontak tersimpan');
     
-    if (firebaseAvailable) {
-      await syncContactInfoToFirebase();
+    try {
+      await db.collection('settings').doc('contactInfo').set(contactInfo, { merge: true });
+      updateSyncStatus('✓ Info kontak diperbarui');
+    } catch (error) {
+      console.error('Error saving contact info:', error);
+      updateSyncStatus('⚠️ Gagal menyimpan info kontak', true);
     }
   }
 
   async function saveArtistPhotoToStorage(imageFile) {
-    let photoUrl = null;
+    if (!firebaseAvailable) return;
     
-    if (firebaseAvailable) {
-      try {
-        const storageRef = storage.ref(`artist/profile_${Date.now()}.jpg`);
-        await storageRef.put(imageFile);
-        photoUrl = await storageRef.getDownloadURL();
-        await syncArtistPhotoToFirebase(photoUrl);
-      } catch (e) {
-        console.warn('Firebase upload failed:', e);
+    try {
+      const storageRef = storage.ref(`artist/profile_${Date.now()}.jpg`);
+      await storageRef.put(imageFile);
+      const photoUrl = await storageRef.getDownloadURL();
+      
+      await db.collection('settings').doc('artist').set({ photoUrl, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      
+      const artistIconDiv = document.querySelector("#artistIconDiv");
+      if (artistIconDiv) {
+        artistIconDiv.innerHTML = `<img src="${photoUrl}" alt="Hayyin" style="display: block; width: 100%; height: 100%; object-fit: cover;">`;
       }
+      updateSyncStatus('✓ Foto profil diperbarui');
+    } catch (error) {
+      console.error('Error saving artist photo:', error);
+      updateSyncStatus('⚠️ Gagal upload foto', true);
     }
-    
-    if (!photoUrl) {
-      const reader = new FileReader();
-      photoUrl = await new Promise((resolve) => {
-        reader.onload = (e) => resolve(e.target.result);
-        reader.readAsDataURL(imageFile);
-      });
-      saveToLocalStorage(STORAGE_KEYS.ARTIST_PHOTO, photoUrl);
-    }
-    
-    const artistIconDiv = document.querySelector("#artistIconDiv");
-    if (artistIconDiv) {
-      artistIconDiv.innerHTML = `<img src="${photoUrl}" alt="Hayyin" style="display: block; width: 100%; height: 100%; object-fit: cover;">`;
-    }
-    updateSyncStatus('📸 Foto profil diperbarui');
   }
 
   // ==================== UI FUNCTIONS ====================
@@ -1939,7 +1770,7 @@
     }
   });
 
-  // TAMBAH KARYA - Modal akan tertutup setelah sukses
+  // TAMBAH KARYA
   document.getElementById('submitKaryaBtn')?.addEventListener('click', async () => {
     const title = document.getElementById('newTitle').value.trim();
     const artist = document.getElementById('newArtist').value.trim();
@@ -1949,7 +1780,6 @@
     
     await saveArtwork({ title, artist, category, desc }, pendingImageFile);
     
-    // Reset form
     document.getElementById('newTitle').value = '';
     document.getElementById('newArtist').value = '';
     document.getElementById('newDesc').value = '';
@@ -1958,12 +1788,10 @@
     document.getElementById('imagePreviewContainer').classList.add('hidden');
     document.getElementById('karyaFormContainer').classList.add('hidden');
     document.getElementById('manageKaryaBtn').classList.remove('active');
-    
-    // TUTUP MODAL ADMIN
     closeModal(document.getElementById('adminModal'));
   });
 
-  // TAMBAH TESTIMONI - Modal akan tertutup setelah sukses
+  // TAMBAH TESTIMONI
   document.getElementById('submitKomentarBtn')?.addEventListener('click', async () => {
     const comment = document.getElementById('newComment').value.trim();
     const author = document.getElementById('commentAuthor').value.trim();
@@ -1972,18 +1800,15 @@
     
     await saveTestimonial({ name: author, role: status || "Pengunjung Galeri", text: comment });
     
-    // Reset form
     document.getElementById('newComment').value = '';
     document.getElementById('commentAuthor').value = '';
     document.getElementById('commentStatus').value = '';
     document.getElementById('komentarFormContainer').classList.add('hidden');
     document.getElementById('manageKomentarBtn').classList.remove('active');
-    
-    // TUTUP MODAL ADMIN
     closeModal(document.getElementById('adminModal'));
   });
 
-  // EDIT KARYA - Modal akan tertutup setelah sukses
+  // EDIT KARYA
   document.getElementById('saveEditKaryaBtn')?.addEventListener('click', async () => {
     if (currentEditingArtId === null) return;
     const title = document.getElementById('editKaryaTitleInput').value.trim();
@@ -1993,13 +1818,11 @@
     if (!title || !artist || !desc) return;
     
     await saveArtwork({ id: currentEditingArtId, title, artist, category, desc }, null);
-    
-    // TUTUP MODAL EDIT KARYA
     closeModal(document.getElementById('editKaryaModal'));
     currentEditingArtId = null;
   });
 
-  // EDIT TESTIMONI - Modal akan tertutup setelah sukses
+  // EDIT TESTIMONI
   document.getElementById('saveEditTestimonialBtn')?.addEventListener('click', async () => {
     if (currentEditingTestimonialId === null) return;
     const text = document.getElementById('editTestimonialTextInput').value.trim();
@@ -2008,8 +1831,6 @@
     if (!text || !name) return;
     
     await saveTestimonial({ id: currentEditingTestimonialId, name, text, role });
-    
-    // TUTUP MODAL EDIT TESTIMONI
     closeModal(document.getElementById('editTestimonialModal'));
     currentEditingTestimonialId = null;
   });
@@ -2091,9 +1912,15 @@
       const dropdown = btn.closest('.dropdown-menu');
       if (dropdown) dropdown.style.display = 'none';
       const id = btn.dataset.id;
-      if (id && artworks.some(a => a.id === id)) {
+      
+      const artwork = artworks.find(a => a.id === id);
+      if (artwork) {
         await deleteArtwork(id);
-      } else if (id && testimonials.some(t => t.id === id)) {
+        return;
+      }
+      
+      const testimonial = testimonials.find(t => t.id === id);
+      if (testimonial) {
         await deleteTestimonial(id);
       }
       return;
@@ -2114,6 +1941,7 @@
         document.getElementById('editKaryaCategoryInput').value = artwork.category || 'digital';
         document.getElementById('editKaryaDescInput').value = artwork.desc || '';
         openModal(document.getElementById('editKaryaModal'));
+        return;
       }
       
       const testimonial = testimonials.find(t => t.id === id);
@@ -2199,11 +2027,16 @@
   // Initialize
   async function init() {
     renderArtists();
-    await Promise.all([
-      loadArtworks(),
-      loadTestimonials(),
-      loadContactInfo()
-    ]);
+    if (firebaseAvailable) {
+      await Promise.all([
+        loadArtworks(),
+        loadTestimonials(),
+        loadContactInfo()
+      ]);
+    } else {
+      document.getElementById('galleryGrid').innerHTML = '<div class="empty-gallery"><i class="fas fa-database"></i><p>Firebase tidak terhubung. Periksa konfigurasi dan koneksi internet.</p></div>';
+      document.getElementById('testimonialsSection').style.display = 'none';
+    }
     observeAnimateItems();
     setTimeout(() => {
       observeAnimateItems();
@@ -2211,7 +2044,6 @@
     }, 200);
     updateAuthUI();
     updateWhatsAppLinks(document.getElementById("whatsappText").innerText);
-    updateSyncStatus('💾 Siap');
   }
 
   init();
