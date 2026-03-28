@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Hayyin's Art | Galeri Seni Anime Premium</title>
+  <!-- Google Fonts + Font Awesome 6 + Material Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-storage-compat.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--gold);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gold-dark);
+    }
+    body {
+      background-color: #FFFFFF;
+      font-family: 'Inter', sans-serif;
+      color: #1A1A1A;
+      line-height: 1.5;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+    body.modal-open {
+      overflow: hidden;
+    }
+    body.menu-open {
+      overflow: hidden;
+    }
+    :root {
+      --gold: #C6A43B;
+      --gold-light: #E4C87C;
+      --gold-dark: #9E7B2E;
+      --charcoal: #1E1E1E;
+      --cream: #FCF9F4;
+      --gray-light: #F5F3EF;
+      --gray-mid: #D4D0C8;
+      --shadow-sm: 0 15px 35px rgba(0, 0, 0, 0.03), 0 5px 12px rgba(0, 0, 0, 0.05);
+      --shadow-elevate: 0 25px 45px -12px rgba(0, 0, 0, 0.2);
+      --shadow-premium: 0 30px 50px -15px rgba(0, 0, 0, 0.25);
+      --transition-smooth: all 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    h1, h2, h3, h4, .logo, .nav-links a, .filter-btn, .btn, .artist-name {
+      font-family: 'Playfair Display', serif;
+    }
+    h2 {
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #1E1E1E 0%, #3a3a3a 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .section-subhead {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      color: var(--gold);
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+      position: relative;
+      display: inline-block;
+    }
+    .section-subhead::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 2px;
+      background: var(--gold);
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      transition: background 0.4s ease, backdrop-filter 0.4s ease, border-bottom 0.4s ease;
+      background: transparent;
+      backdrop-filter: none;
+      border-bottom: none;
+      animation: navbarSlideDown 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+    }
+    @keyframes navbarSlideDown {
+      0% { opacity: 0; transform: translateY(-30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    header.scrolled {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
+    }
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .logo {
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #1E1E1E 30%, var(--gold) 80%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      cursor: default;
+      transition: transform 0.3s ease;
+    }
+    .logo:hover { transform: scale(1.02); }
+    .nav-links {
+      display: flex;
+      gap: 2.8rem;
+      list-style: none;
+      align-items: center;
+    }
+    .nav-links a {
+      text-decoration: none;
+      font-weight: 500;
+      color: #2C2C2C;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--gold);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover::after,
+    .nav-links a.active::after {
+      width: 100%;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--gold);
+    }
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.8rem;
+      color: var(--gold);
+      transition: transform 0.3s;
+      z-index: 1002;
+    }
+    .menu-toggle:hover {
+      transform: scale(1.05);
+    }
+    .menu-close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 1.8rem;
+      color: var(--gold);
+      cursor: pointer;
+      transition: transform 0.3s ease, color 0.3s ease;
+      background: none;
+      border: none;
+      display: none;
+    }
+    .menu-close-btn:hover {
+      color: var(--gold-dark);
+      transform: rotate(90deg) scale(1.1);
+    }
+    .admin-icon {
+      cursor: pointer;
+      font-size: 1.8rem;
+      color: var(--gold);
+      background: rgba(198, 164, 59, 0.1);
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s;
+      margin-left: 1rem;
+    }
+    .admin-icon:hover {
+      background: var(--gold);
+      color: white;
+    }
+    .admin-icon.hidden {
+      display: none;
+    }
+    .btn {
+      display: inline-block;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition-smooth);
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .btn-primary {
+      background: var(--charcoal);
+      color: white;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: var(--gold);
+      transition: left 0.4s ease;
+      z-index: -1;
+    }
+    .btn-primary:hover::before {
+      left: 0;
+    }
+    .btn-primary:hover {
+      color: var(--charcoal);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 25px rgba(198, 164, 59, 0.3);
+    }
+    .hero {
+      background: linear-gradient(135deg, #FFF9EF 0%, #FFFFFF 100%);
+      padding: 9rem 0 7rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -10%;
+      width: 80%;
+      height: 140%;
+      background: radial-gradient(circle, rgba(198,164,59,0.08) 0%, rgba(198,164,59,0) 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      background: linear-gradient(to top, white, transparent);
+      pointer-events: none;
+    }
+    .hero-grid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      flex-direction: column;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hero-content h1 {
+      font-size: 4.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin: 1.5rem 0 1.5rem 0;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #1E1E1E 0%, #4a4a4a 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .hero-content p {
+      font-size: 1.2rem;
+      color: #5a5a5a;
+      margin-bottom: 2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .filter-section {
+      margin: 4rem 0 2rem;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .filter-btn {
+      background: transparent;
+      border: none;
+      padding: 0.7rem 2rem;
+      font-size: 0.9rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #5a5a5a;
+      background: #F5F3EF;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--charcoal);
+      color: white;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 2.5rem;
+      margin: 3rem 0 4rem;
+    }
+    .art-card {
+      background: white;
+      border-radius: 28px;
+      overflow: hidden;
+      transition: var(--transition-smooth);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .art-card:hover {
+      transform: translateY(-12px);
+      box-shadow: var(--shadow-premium);
+    }
+    .image-container {
+      width: 100%;
+      background-color: #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      min-height: 200px;
+    }
+    .art-img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      background-color: #000000;
+      transition: transform 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    .art-card:hover .art-img {
+      transform: scale(1.03);
+    }
+    .card-info {
+      padding: 1.8rem 1.5rem 2rem;
+      background: white;
+      position: relative;
+    }
+    .card-info h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      padding-right: 2rem;
+    }
+    .artist {
+      color: var(--gold);
+      font-weight: 500;
+      font-size: 0.85rem;
+      margin-bottom: 0.8rem;
+    }
+    .view-details {
+      margin-top: 1.2rem;
+      background: none;
+      border: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--charcoal);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: gap 0.3s;
+    }
+    .view-details:hover {
+      gap: 12px;
+      color: var(--gold);
+    }
+    .empty-gallery {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 2rem;
+      background: transparent;
+      border-radius: 28px;
+      color: #999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .empty-gallery i {
+      font-size: 4rem;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+    .empty-gallery p {
+      font-size: 1.1rem;
+      color: #888;
+    }
+    .testimonials-section {
+      padding: 5rem 0;
+      background: white;
+      overflow: hidden;
+    }
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      margin-top: 2rem;
+    }
+    .carousel-track {
+      display: flex;
+      gap: 2rem;
+      width: max-content;
+      will-change: transform;
+    }
+    .carousel-track.animate {
+      animation: scrollRight infinite 40s linear;
+    }
+    .carousel-track.animate:hover {
+      animation-play-state: paused;
+    }
+    .testimonial-card {
+      flex: 0 0 400px;
+      background: var(--gray-light);
+      border-radius: 40px;
+      padding: 2.2rem;
+      border: 1px solid rgba(198,164,59,0.1);
+      position: relative;
+    }
+    .testimonial-card i.fa-quote-left {
+      font-size: 2.2rem;
+      color: var(--gold);
+      opacity: 0.5;
+      margin-bottom: 1rem;
+    }
+    @keyframes scrollRight {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .artists-section {
+      background: linear-gradient(135deg, #FCF9F4 0%, #FFFFFF 100%);
+      padding: 6rem 0;
+      margin: 2rem 0;
+    }
+    .artist-cards {
+      display: flex;
+      justify-content: center;
+      margin-top: 4rem;
+    }
+    .artist-card {
+      background: white;
+      border-radius: 40px;
+      text-align: center;
+      padding: 2rem 2.5rem;
+      max-width: 350px;
+      width: 100%;
+      transition: var(--transition-smooth);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid rgba(198,164,59,0.1);
+      margin: 0 auto;
+      position: relative;
+    }
+    .artist-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-elevate);
+      border-color: rgba(198,164,59,0.3);
+    }
+    .artist-icon {
+      font-size: 5rem;
+      color: var(--gold);
+      margin: 0 auto 1rem auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 140px;
+      height: 140px;
+      background: var(--gray-light);
+      border-radius: 50%;
+      border: 3px solid var(--gold);
+      transition: all 0.4s ease;
+      overflow: hidden;
+      cursor: default;
+      position: relative;
+    }
+    .artist-icon.editable {
+      cursor: pointer;
+    }
+    .artist-icon.editable:hover {
+      transform: scale(1.03);
+      box-shadow: inset 0 0 0 4px rgba(198, 164, 59, 0.5), inset 0 0 0 8px rgba(198, 164, 59, 0.3), 0 5px 15px rgba(0,0,0,0.1);
+      border-color: var(--gold-light);
+    }
+    .artist-icon i {
+      font-size: 5rem;
+      color: var(--gold);
+    }
+    .artist-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .artist-card:hover .artist-icon {
+      transform: scale(1.02);
+    }
+    .artist-card h4 {
+      font-size: 1.4rem;
+      margin-bottom: 0.4rem;
+    }
+    .contact-section {
+      padding: 6rem 0;
+      background: linear-gradient(135deg, #FFFFFF 0%, #FCF9F4 100%);
+    }
+    .contact-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4rem;
+      margin-top: 3rem;
+    }
+    .contact-info {
+      flex: 1;
+      padding: 1rem;
+    }
+    .contact-info h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .editable-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0.8rem;
+    }
+    .editable-item i:first-child {
+      width: 28px;
+      font-size: 1.2rem;
+      color: #1A1A1A;
+    }
+    .editable-item .edit-icon {
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--gold);
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .editable-item .edit-icon.visible {
+      opacity: 1;
+    }
+    .editable-item .edit-icon:hover {
+      transform: scale(1.1);
+    }
+    .contact-info p, .contact-info .editable-item span {
+      color: #1A1A1A;
+    }
+    .contact-info a {
+      color: #1A1A1A;
+      text-decoration: none;
+    }
+    .contact-info a:hover {
+      color: var(--gold);
+    }
+    .contact-form {
+      flex: 1;
+      background: white;
+      padding: 2.5rem;
+      border-radius: 40px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid rgba(198,164,59,0.15);
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      border: 1px solid #e8e5df;
+      border-radius: 60px;
+      font-family: 'Inter', sans-serif;
+      background: white;
+      font-size: 0.95rem;
+    }
+    textarea {
+      border-radius: 28px;
+      resize: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(198, 164, 59, 0.1);
+    }
+    button[type="submit"] {
+      background: var(--charcoal);
+      color: white;
+      width: 100%;
+      padding: 1rem;
+      border-radius: 60px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 1rem;
+    }
+    button[type="submit"]:hover {
+      background: var(--gold);
+      color: var(--charcoal);
+      transform: translateY(-2px);
+    }
+    .back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: var(--gold);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 999;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: none;
+    }
+    .back-to-top.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .back-to-top:hover {
+      background: var(--gold-dark);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+    footer {
+      background: #0A0A0A;
+      color: #aaa;
+      padding: 3rem 0 2rem;
+      position: relative;
+      animation: footerSlideUp 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+    }
+    @keyframes footerSlideUp {
+      0% { opacity: 0; transform: translateY(40px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .footer-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      position: relative;
+    }
+    .footer-logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e0cfb2 30%, var(--gold) 80%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .footer-copyright {
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .footer-auth-wrapper {
+      position: absolute;
+      bottom: 2rem;
+      left: 2rem;
+    }
+    .btn-login, .btn-logout {
+      background: rgba(198, 164, 59, 0.12);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 0.6rem 1.5rem;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-login:hover, .btn-logout:hover {
+      background: var(--gold);
+      color: #111;
+      transform: translateY(-2px);
+    }
+    .hidden {
+      display: none;
+    }
+    .admin-modal {
+      max-width: 550px;
+    }
+    .modal-content {
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .modal-content::-webkit-scrollbar {
+      display: none;
+    }
+    .admin-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin: 1.5rem 0;
+    }
+    .admin-option-btn {
+      background: var(--gray-light);
+      border: 1px solid rgba(198,164,59,0.3);
+      padding: 0.8rem 1.5rem;
+      border-radius: 60px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--charcoal);
+    }
+    .admin-option-btn i {
+      font-size: 1.1rem;
+      color: var(--gold);
+    }
+    .admin-option-btn.active {
+      background: var(--gold);
+      color: white;
+      border-color: var(--gold);
+    }
+    .admin-option-btn.active i {
+      color: white;
+    }
+    .admin-option-btn:hover {
+      background: var(--gold);
+      color: white;
+      border-color: var(--gold);
+      transform: translateX(5px);
+    }
+    .admin-option-btn:hover i {
+      color: white;
+    }
+    .sub-form {
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid #eee;
+    }
+    .sub-form h4 {
+      margin-bottom: 0.8rem;
+      font-size: 1.1rem;
+    }
+    .upload-btn {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      border: 1px solid #e8e5df;
+      border-radius: 60px;
+      font-family: 'Inter', sans-serif;
+      background: white;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: center;
+      color: #5a5a5a;
+      margin-bottom: 1rem;
+    }
+    .upload-btn:hover {
+      border-color: var(--gold);
+      background: rgba(198,164,59,0.05);
+    }
+    .edit-modal {
+      max-width: 550px;
+    }
+    .edit-modal .modal-body {
+      text-align: left;
+    }
+    .edit-modal input {
+      margin: 1rem 0;
+      width: 100%;
+    }
+
+    .card-menu {
+      position: absolute;
+      top: 0.8rem;
+      right: 1rem;
+      z-index: 30;
+      background: transparent;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 1;
+    }
+    .card-menu:hover {
+      transform: scale(1.1);
+    }
+    .card-menu span {
+      font-size: 1.65rem;
+      color: var(--gold);
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 45px;
+      right: 0;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: var(--shadow-premium);
+      padding: 8px 0;
+      min-width: 170px;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(198,164,59,0.15);
+    }
+    .dropdown-menu button {
+      background: none;
+      border: none;
+      padding: 14px 24px;
+      text-align: left;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #1A1A1A;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .dropdown-menu button:hover {
+      background: var(--gray-light);
+    }
+    .dropdown-menu button i {
+      font-size: 1.15rem;
+      color: var(--gold);
+    }
+    .dropdown-menu button.delete-btn i {
+      color: var(--gold);
+    }
+
+    @media (max-width: 768px) {
+      .card-menu {
+        top: 0.5rem;
+        right: 0.8rem;
+        width: 34px;
+        height: 34px;
+      }
+      .card-menu span {
+        font-size: 1.5rem;
+      }
+      .dropdown-menu {
+        top: 40px;
+        right: 0;
+        min-width: 155px;
+      }
+      .card-info h3 {
+        padding-right: 2rem;
+      }
+      h2 {
+        font-size: 2.2rem;
+      }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(12px);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      max-width: 900px;
+      width: 85%;
+      border-radius: 40px;
+      overflow: hidden;
+      animation: fadeUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: scale(0.96) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-img {
+      width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+      background-color: #000000;
+    }
+    .modal-body {
+      padding: 2rem;
+    }
+    .inquiry-btn {
+      margin-top: 1.5rem;
+    }
+    .close-modal {
+      position: absolute;
+      top: 28px;
+      right: 32px;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+    .close-modal:hover {
+      color: var(--gold);
+      transform: rotate(90deg) scale(1.1);
+    }
+    .login-modal, .admin-modal, .edit-modal {
+      max-width: 550px;
+    }
+    .login-input {
+      margin: 0.8rem 0;
+      padding: 0.8rem;
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 40px;
+    }
+    .animate-item {
+      opacity: 0;
+      will-change: transform, opacity;
+    }
+    .fade-up { animation: fadeUpAnim 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards; }
+    .fade-left { animation: fadeLeftAnim 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards; }
+    .fade-right { animation: fadeRightAnim 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards; }
+    .scale-up { animation: scaleUpAnim 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards; }
+    .zoom-in { animation: zoomInAnim 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards; }
+    .slide-up { animation: slideUpAnim 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards; }
+    .blur-in { animation: blurInAnim 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards; }
+    @keyframes fadeUpAnim { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeLeftAnim { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes fadeRightAnim { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes scaleUpAnim { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+    @keyframes zoomInAnim { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideUpAnim { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes blurInAnim { from { opacity: 0; filter: blur(8px); transform: scale(1.02); } to { opacity: 1; filter: blur(0); transform: scale(1); } }
+    section, #gallery { scroll-margin-top: 100px; }
+    .nav-links li {
+      opacity: 0;
+      animation: fadeUpAnim 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+    }
+    .nav-links li:nth-child(1) { animation-delay: 0.1s; }
+    .nav-links li:nth-child(2) { animation-delay: 0.2s; }
+    .nav-links li:nth-child(3) { animation-delay: 0.3s; }
+    .nav-links li:nth-child(4) { animation-delay: 0.4s; }
+   
+    #photoUpload, #artworkImageUpload {
+      display: none;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gold);
+    }
+    
+    .sync-status {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      z-index: 999;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
+<header id="mainHeader">
+  <div class="nav-bar">
+    <div class="logo">Hayyin's Art</div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <button class="menu-close-btn" id="menuCloseBtn"><i class="fas fa-times"></i></button>
+      <li><a href="#home" class="nav-link">Beranda</a></li>
+      <li><a href="#gallery" class="nav-link">Koleksi</a></li>
+      <li><a href="#artists" class="nav-link">Seniman</a></li>
+      <li><a href="#contact" class="nav-link">Pesan Karya</a></li>
+      <li><div class="admin-icon hidden" id="adminIcon"><span class="material-symbols-outlined">add_box</span></div></li>
+    </ul>
+  </div>
+  <div class="menu-overlay" id="menuOverlay"></div>
+</header>
+<main>
+  <section id="home" class="hero">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <div class="section-subhead animate-item" data-animation="fade-up" data-delay="0">EST. 2022 · PONOROGO</div>
+        <h1 class="animate-item" data-animation="scale-up" data-delay="0.1">The Grand Space<br>of Imagination</h1>
+        <p class="animate-item" data-animation="fade-up" data-delay="0.2">Koleksi mahakarya dari ilustrator visioner. Rasakan emosi, fantasi, dan keindahan seni ilustrasi.</p>
+        <a href="#gallery" class="btn btn-primary animate-item" data-animation="zoom-in" data-delay="0.3">Jelajahi koleksi <i class="fas fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </section>
+  <div class="container" id="gallery">
+    <div class="section-header" style="text-align:center; margin-top: 4rem;">
+      <div class="section-subhead animate-item" data-animation="fade-up" data-delay="0">kurasi eksklusif</div>
+      <h2 class="animate-item" data-animation="scale-up" data-delay="0.1">Karya</h2>
+    </div>
+    <div class="filter-section animate-item" data-animation="fade-up" data-delay="0.15">
+      <button class="filter-btn active" data-filter="all">Semua Karya</button>
+      <button class="filter-btn" data-filter="digital">Digital</button>
+      <button class="filter-btn" data-filter="tradisional">Tradisional</button>
+    </div>
+    <div class="gallery-grid" id="galleryGrid">
+      <div class="loading">Memuat karya...</div>
+    </div>
+  </div>
+  <section id="artists" class="artists-section">
+    <div class="container">
+      <div style="text-align:center;">
+        <div class="section-subhead animate-item" data-animation="fade-up" data-delay="0">Maestro & visioner</div>
+        <h2 class="animate-item" data-animation="scale-up" data-delay="0.1">Seniman</h2>
+      </div>
+      <div class="artist-cards" id="artistCards"></div>
+    </div>
+  </section>
+  <div class="testimonials-section" id="testimonialsSection">
+    <div class="container">
+      <div style="text-align:center;">
+        <div class="section-subhead animate-item" data-animation="fade-up" data-delay="0">Suara kolektor</div>
+        <h2 class="animate-item" data-animation="scale-up" data-delay="0.1">Testimoni</h2>
+      </div>
+    </div>
+    <div class="carousel-container animate-item" data-animation="blur-in" data-delay="0.2" id="carouselContainer">
+      <div class="carousel-track" id="carouselTrack">
+        <div class="loading">Memuat testimoni...</div>
+      </div>
+    </div>
+  </div>
+  <section id="contact" class="contact-section">
+    <div class="container">
+      <div style="text-align:center;">
+        <div class="section-subhead animate-item" data-animation="fade-up" data-delay="0">Koleksi privat & akuisisi</div>
+        <h2 class="animate-item" data-animation="scale-up" data-delay="0.1">Pesan Karya</h2>
+      </div>
+      <div class="contact-wrapper">
+        <div class="contact-info animate-item" data-animation="fade-left" data-delay="0.2">
+          <h3><i class="fas fa-map-marker-alt" style="color: var(--gold);"></i> Galeri</h3>
+          <div class="editable-item">
+            <i class="fas fa-location-dot"></i>
+            <span id="addressText">Jl. Seni Raya No. 45, Ponorogo, Indonesia</span>
+            <i class="fas fa-pen edit-icon" id="editAddressIcon"></i>
+          </div>
+          <div class="editable-item">
+            <i class="fab fa-instagram"></i>
+            <span id="instagramText">@hayyinkayafaa</span>
+            <i class="fas fa-pen edit-icon" id="editInstagramIcon"></i>
+          </div>
+          <div class="editable-item">
+            <i class="fab fa-whatsapp"></i>
+            <span id="whatsappText">+62 821 1234 5678</span>
+            <i class="fas fa-pen edit-icon" id="editWhatsappIcon"></i>
+          </div>
+          <div style="margin-top: 2rem;">
+            <h4>Jam operasional</h4>
+            <div class="editable-item">
+              <i class="far fa-clock"></i>
+              <span id="hoursText">Selasa – Sabtu: 10:00 – 19:00</span>
+              <i class="fas fa-pen edit-icon" id="editHoursIcon"></i>
+            </div>
+          </div>
+        </div>
+        <div class="contact-form animate-item" data-animation="fade-right" data-delay="0.2">
+          <form id="contactForm">
+            <div class="form-group"><input type="text" id="name" placeholder="Nama" required></div>
+            <div class="form-group"><input type="text" id="contactHandle" placeholder="No telp atau username IG" required></div>
+            <div class="form-group"><textarea rows="4" placeholder="Deskripsi pesanan" id="message" required></textarea></div>
+            <button type="submit">Kirim permintaan <i class="fas fa-paper-plane"></i></button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer>
+  <div class="footer-container">
+    <div class="footer-logo animate-item" data-animation="fade-up" data-delay="0">Hayyin's Art</div>
+    <div class="footer-copyright animate-item" data-animation="fade-up" data-delay="0.15">
+      <p><strong>© 2026</strong></p>
+    </div>
+  </div>
+  <div class="footer-auth-wrapper animate-item" data-animation="fade-left" data-delay="0.2">
+    <button class="btn-login" id="ownerLoginBtn"><i class="fas fa-lock"></i> Login Pemilik</button>
+    <button class="btn-logout hidden" id="ownerLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</footer>
+<button class="back-to-top" id="backToTopBtn"><i class="fas fa-arrow-up"></i></button>
+<div class="sync-status" id="syncStatus">💾 Siap</div>
+<input type="file" id="photoUpload" accept="image/*">
+<input type="file" id="artworkImageUpload" accept="image/*">
+
+<div id="artModal" class="modal"><span class="close-modal">&times;</span><div class="modal-content"><img id="modalImage" class="modal-img"><div class="modal-body"><h3 id="modalTitle"></h3><p id="modalArtist" style="color: var(--gold);"></p><p id="modalDesc"></p><button class="btn inquiry-btn" id="modalInquiryBtn"><i class="fab fa-whatsapp"></i> Pesan via WhatsApp</button></div></div></div>
+<div id="loginModal" class="modal"><div class="modal-content login-modal"><span class="close-modal" id="closeLoginModal">&times;</span><div class="modal-body"><i class="fas fa-crown" style="font-size: 3rem; color: var(--gold); margin-bottom: 1rem;"></i><h3>Akses Pemilik</h3><p style="margin: 1rem 0;">Masukkan kredensial</p><input type="text" id="loginUser" class="login-input" placeholder="Username"><input type="password" id="loginPass" class="login-input" placeholder="Password"><button class="btn btn-primary" id="submitLogin" style="margin-top: 1rem; width: 100%;">Authentikasi</button></div></div></div>
+<div id="adminModal" class="modal"><div class="modal-content admin-modal"><span class="close-modal" id="closeAdminModal">&times;</span><div class="modal-body"><i class="fas fa-chalkboard-user" style="font-size: 3rem; color: var(--gold); margin-bottom: 1rem;"></i><h3>Panel Admin</h3><p style="margin-bottom: 1rem;">Pilih opsi yang ingin dikelola</p><div class="admin-options"><button class="admin-option-btn" id="manageKaryaBtn"><i class="fas fa-palette"></i> Kelola Karya</button><button class="admin-option-btn" id="manageKomentarBtn"><i class="fas fa-comment"></i> Kelola Komentar</button></div><div id="karyaFormContainer" class="sub-form hidden"><h4><i class="fas fa-plus-circle"></i> Tambah Karya Baru</h4><div class="form-group"><input type="text" id="newTitle" placeholder="Judul Karya" class="login-input"></div><div class="form-group"><input type="text" id="newArtist" placeholder="Nama Seniman" class="login-input"></div><div class="form-group"><select id="newCategory" class="login-input"><option value="digital">Digital</option><option value="tradisional">Tradisional</option></select></div><div class="form-group"><textarea id="newDesc" rows="3" placeholder="Deskripsi karya" class="login-input"></textarea></div><div class="upload-btn" id="uploadArtworkBtn"><i class="fas fa-cloud-upload-alt"></i> Upload Gambar dari Device</div><div class="form-group hidden" id="imagePreviewContainer"><img id="imagePreview" style="width: 100%; max-height: 200px; object-fit: contain; background: #000;"></div><button class="btn btn-primary" id="submitKaryaBtn" style="width:100%">Tambah Karya</button></div><div id="komentarFormContainer" class="sub-form hidden"><h4><i class="fas fa-comment-dots"></i> Kelola Komentar</h4><div class="form-group"><textarea id="newComment" rows="3" placeholder="Tulis komentar baru" class="login-input"></textarea></div><div class="form-group"><input type="text" id="commentAuthor" placeholder="Nama pengunjung" class="login-input"></div><div class="form-group"><input type="text" id="commentStatus" placeholder="Status (contoh: Kolektor, Tokyo / Direktur Galeri, Milan)" class="login-input"></div><button class="btn btn-primary" id="submitKomentarBtn" style="width:100%">Tambah Komentar</button><div style="margin-top: 1rem;"><p style="font-size:0.85rem; color:#666;"><i class="fas fa-info-circle"></i> Komentar akan ditampilkan di bagian testimonial</p></div></div></div></div></div>
+<div id="editModal" class="modal"><div class="modal-content edit-modal"><span class="close-modal" id="closeEditModal">&times;</span><div class="modal-body"><i class="fas fa-edit" style="font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem;"></i><h3 id="editModalTitle">Edit Informasi</h3><input type="text" id="editInput" class="login-input" placeholder="Masukkan nilai baru"><button class="btn btn-primary" id="saveEditBtn" style="margin-top: 1rem; width: 100%;">Simpan Perubahan</button></div></div></div>
+<div id="editKaryaModal" class="modal"><div class="modal-content" style="max-width: 550px;"><span class="close-modal" id="closeEditKaryaModal">&times;</span><div class="modal-body"><i class="fas fa-edit" style="font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem;"></i><h3>Edit Karya</h3><div class="form-group"><input type="text" id="editKaryaTitleInput" placeholder="Judul Karya" class="login-input"></div><div class="form-group"><input type="text" id="editKaryaArtistInput" placeholder="Nama Seniman" class="login-input"></div><div class="form-group"><select id="editKaryaCategoryInput" class="login-input"><option value="digital">Digital</option><option value="tradisional">Tradisional</option></select></div><div class="form-group"><textarea id="editKaryaDescInput" rows="4" placeholder="Deskripsi karya" class="login-input"></textarea></div><button class="btn btn-primary" id="saveEditKaryaBtn" style="width:100%; margin-top: 1rem;">Simpan Perubahan Karya</button></div></div></div>
+<div id="editTestimonialModal" class="modal"><div class="modal-content" style="max-width: 550px;"><span class="close-modal" id="closeEditTestimonialModal">&times;</span><div class="modal-body"><i class="fas fa-edit" style="font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem;"></i><h3>Edit Testimoni</h3><div class="form-group"><textarea id="editTestimonialTextInput" rows="4" placeholder="Isi testimoni" class="login-input"></textarea></div><div class="form-group"><input type="text" id="editTestimonialNameInput" placeholder="Nama pengunjung" class="login-input"></div><div class="form-group"><input type="text" id="editTestimonialRoleInput" placeholder="Status" class="login-input"></div><button class="btn btn-primary" id="saveEditTestimonialBtn" style="width:100%; margin-top: 1rem;">Simpan Perubahan Testimoni</button></div></div></div>
+
+<script>
+  // Firebase Configuration - REPLACE WITH YOUR OWN CONFIG
+  const firebaseConfig = {
+  apiKey: "AIzaSyA-Aqr6AkZiN3K8aKsWrbec4kGpMUIqzvg",
+  authDomain: "my-personal-gifts.firebaseapp.com",
+  projectId: "my-personal-gifts",
+  storageBucket: "my-personal-gifts.firebasestorage.app",
+  messagingSenderId: "889770581952",
+  appId: "1:889770581952:web:56738a4d9cbefae2417225"
+};
+
+  // Initialize Firebase
+  let db, storage;
+  let firebaseAvailable = false;
+  
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    storage = firebase.storage();
+    firebaseAvailable = true;
+    console.log("Firebase connected");
+  } catch (e) {
+    console.warn("Firebase not available, using local storage only", e);
+    firebaseAvailable = false;
+  }
+
+  // Local Storage Keys
+  const STORAGE_KEYS = {
+    ARTWORKS: 'hayyin_artworks',
+    TESTIMONIALS: 'hayyin_testimonials',
+    CONTACT_INFO: 'hayyin_contact_info',
+    ARTIST_PHOTO: 'hayyin_artist_photo'
+  };
+
+  let artworks = [];
+  let testimonials = [];
+  let activeFilter = "all";
+  let currentModalArt = null;
+  let isLoggedIn = false;
+  let pendingImageData = null;
+  let pendingImageFile = null;
+  let currentEditField = null;
+  let currentEditingArtId = null;
+  let currentEditingTestimonialId = null;
+
+  const syncStatus = document.getElementById('syncStatus');
+
+  function updateSyncStatus(message, isError = false) {
+    if (syncStatus) {
+      syncStatus.textContent = message;
+      syncStatus.style.backgroundColor = isError ? 'rgba(220, 53, 69, 0.8)' : 'rgba(0,0,0,0.7)';
+      setTimeout(() => {
+        if (syncStatus.textContent === message) {
+          syncStatus.textContent = '✅ Tersimpan';
+          setTimeout(() => {
+            if (syncStatus.textContent === '✅ Tersimpan') {
+              syncStatus.textContent = '💾 Tersimpan';
+            }
+          }, 2000);
+        }
+      }, 2000);
+    }
+  }
+
+  // ==================== LOCAL STORAGE FUNCTIONS ====================
+  function saveToLocalStorage(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+      return true;
+    } catch (e) {
+      console.error('Failed to save to localStorage:', e);
+      return false;
+    }
+  }
+
+  function loadFromLocalStorage(key, defaultValue = []) {
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : defaultValue;
+    } catch (e) {
+      console.error('Failed to load from localStorage:', e);
+      return defaultValue;
+    }
+  }
+
+  // ==================== FIREBASE SYNC FUNCTIONS ====================
+  async function syncArtworksToFirebase() {
+    if (!firebaseAvailable) return false;
+    try {
+      const batch = db.batch();
+      const snapshot = await db.collection('artworks').get();
+      snapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+      
+      for (const art of artworks) {
+        const artData = {
+          title: art.title,
+          artist: art.artist,
+          category: art.category,
+          desc: art.desc,
+          year: art.year || "2025",
+          imageUrl: art.imageUrl || null,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (art.id && !art.id.startsWith('local_')) {
+          await db.collection('artworks').doc(art.id).set(artData, { merge: true });
+        } else {
+          const docRef = await db.collection('artworks').add(artData);
+          art.id = docRef.id;
+        }
+      }
+      saveToLocalStorage(STORAGE_KEYS.ARTWORKS, artworks);
+      updateSyncStatus('☁️ Tersimpan ke cloud');
+      return true;
+    } catch (e) {
+      console.error('Sync to Firebase failed:', e);
+      updateSyncStatus('⚠️ Gagal sinkron ke cloud', true);
+      return false;
+    }
+  }
+
+  async function syncTestimonialsToFirebase() {
+    if (!firebaseAvailable) return false;
+    try {
+      const batch = db.batch();
+      const snapshot = await db.collection('testimonials').get();
+      snapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+      
+      for (const test of testimonials) {
+        const testData = {
+          name: test.name,
+          role: test.role,
+          text: test.text,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (test.id && !test.id.startsWith('local_')) {
+          await db.collection('testimonials').doc(test.id).set(testData, { merge: true });
+        } else {
+          const docRef = await db.collection('testimonials').add(testData);
+          test.id = docRef.id;
+        }
+      }
+      saveToLocalStorage(STORAGE_KEYS.TESTIMONIALS, testimonials);
+      return true;
+    } catch (e) {
+      console.error('Sync testimonials to Firebase failed:', e);
+      return false;
+    }
+  }
+
+  async function syncContactInfoToFirebase() {
+    if (!firebaseAvailable) return false;
+    try {
+      const contactInfo = {
+        address: document.getElementById('addressText').innerText,
+        instagram: document.getElementById('instagramText').innerText,
+        whatsapp: document.getElementById('whatsappText').innerText,
+        hours: document.getElementById('hoursText').innerText,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await db.collection('settings').doc('contactInfo').set(contactInfo, { merge: true });
+      saveToLocalStorage(STORAGE_KEYS.CONTACT_INFO, contactInfo);
+      return true;
+    } catch (e) {
+      console.error('Sync contact info failed:', e);
+      return false;
+    }
+  }
+
+  async function syncArtistPhotoToFirebase(photoUrl) {
+    if (!firebaseAvailable) return false;
+    try {
+      await db.collection('settings').doc('artist').set({ photoUrl, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      saveToLocalStorage(STORAGE_KEYS.ARTIST_PHOTO, photoUrl);
+      return true;
+    } catch (e) {
+      console.error('Sync artist photo failed:', e);
+      return false;
+    }
+  }
+
+  // ==================== LOAD DATA ====================
+  async function loadArtworks() {
+    const localArtworks = loadFromLocalStorage(STORAGE_KEYS.ARTWORKS, []);
+    
+    if (firebaseAvailable) {
+      try {
+        const snapshot = await db.collection('artworks').orderBy('updatedAt', 'desc').get();
+        if (!snapshot.empty) {
+          artworks = [];
+          snapshot.forEach(doc => {
+            artworks.push({ id: doc.id, ...doc.data() });
+          });
+          saveToLocalStorage(STORAGE_KEYS.ARTWORKS, artworks);
+          renderGallery();
+          return;
+        }
+      } catch (e) {
+        console.warn('Firebase load failed, using local storage:', e);
+      }
+    }
+    
+    artworks = localArtworks;
+    renderGallery();
+  }
+
+  async function loadTestimonials() {
+    const localTestimonials = loadFromLocalStorage(STORAGE_KEYS.TESTIMONIALS, []);
+    
+    if (firebaseAvailable) {
+      try {
+        const snapshot = await db.collection('testimonials').orderBy('updatedAt', 'desc').get();
+        if (!snapshot.empty) {
+          testimonials = [];
+          snapshot.forEach(doc => {
+            testimonials.push({ id: doc.id, ...doc.data() });
+          });
+          saveToLocalStorage(STORAGE_KEYS.TESTIMONIALS, testimonials);
+          initCarousel();
+          return;
+        }
+      } catch (e) {
+        console.warn('Firebase load testimonials failed:', e);
+      }
+    }
+    
+    testimonials = localTestimonials;
+    initCarousel();
+  }
+
+  async function loadContactInfo() {
+    const localContact = loadFromLocalStorage(STORAGE_KEYS.CONTACT_INFO, null);
+    
+    if (firebaseAvailable) {
+      try {
+        const doc = await db.collection('settings').doc('contactInfo').get();
+        if (doc.exists) {
+          const data = doc.data();
+          if (data.address) document.getElementById('addressText').innerText = data.address;
+          if (data.instagram) document.getElementById('instagramText').innerText = data.instagram;
+          if (data.whatsapp) document.getElementById('whatsappText').innerText = data.whatsapp;
+          if (data.hours) document.getElementById('hoursText').innerText = data.hours;
+          saveToLocalStorage(STORAGE_KEYS.CONTACT_INFO, data);
+          updateWhatsAppLinks(data.whatsapp || '+62 821 1234 5678');
+          return;
+        }
+      } catch (e) {
+        console.warn('Firebase load contact failed:', e);
+      }
+    }
+    
+    if (localContact) {
+      if (localContact.address) document.getElementById('addressText').innerText = localContact.address;
+      if (localContact.instagram) document.getElementById('instagramText').innerText = localContact.instagram;
+      if (localContact.whatsapp) document.getElementById('whatsappText').innerText = localContact.whatsapp;
+      if (localContact.hours) document.getElementById('hoursText').innerText = localContact.hours;
+      updateWhatsAppLinks(localContact.whatsapp || '+62 821 1234 5678');
+    }
+  }
+
+  async function loadArtistPhoto() {
+    const localPhoto = loadFromLocalStorage(STORAGE_KEYS.ARTIST_PHOTO, null);
+    const artistIconDiv = document.querySelector("#artistIconDiv");
+    
+    if (firebaseAvailable) {
+      try {
+        const doc = await db.collection('settings').doc('artist').get();
+        if (doc.exists && doc.data().photoUrl) {
+          if (artistIconDiv) {
+            artistIconDiv.innerHTML = `<img src="${doc.data().photoUrl}" alt="Hayyin" style="display: block; width: 100%; height: 100%; object-fit: cover;">`;
+          }
+          saveToLocalStorage(STORAGE_KEYS.ARTIST_PHOTO, doc.data().photoUrl);
+          return;
+        }
+      } catch (e) {
+        console.warn('Firebase load artist photo failed:', e);
+      }
+    }
+    
+    if (localPhoto && artistIconDiv) {
+      artistIconDiv.innerHTML = `<img src="${localPhoto}" alt="Hayyin" style="display: block; width: 100%; height: 100%; object-fit: cover;">`;
+    }
+  }
+
+  // ==================== CRUD OPERATIONS ====================
+  async function saveArtwork(artworkData, imageFile) {
+    let imageUrl = artworkData.imageUrl;
+    
+    if (imageFile) {
+      if (firebaseAvailable) {
+        try {
+          const storageRef = storage.ref(`artworks/${Date.now()}_${imageFile.name}`);
+          await storageRef.put(imageFile);
+          imageUrl = await storageRef.getDownloadURL();
+        } catch (e) {
+          console.warn('Firebase upload failed, using local base64', e);
+          imageUrl = pendingImageData;
+        }
+      } else {
+        imageUrl = pendingImageData;
+      }
+    }
+    
+    const newArtwork = {
+      id: artworkData.id || 'local_' + Date.now(),
+      title: artworkData.title,
+      artist: artworkData.artist,
+      category: artworkData.category,
+      desc: artworkData.desc,
+      year: artworkData.year || "2025",
+      imageUrl: imageUrl || null
+    };
+    
+    if (artworkData.id && !artworkData.id.startsWith('local_')) {
+      const index = artworks.findIndex(a => a.id === artworkData.id);
+      if (index !== -1) {
+        artworks[index] = newArtwork;
+      } else {
+        artworks.push(newArtwork);
+      }
+    } else {
+      artworks.unshift(newArtwork);
+    }
+    
+    saveToLocalStorage(STORAGE_KEYS.ARTWORKS, artworks);
+    renderGallery();
+    updateSyncStatus('💾 Tersimpan lokal');
+    
+    if (firebaseAvailable) {
+      await syncArtworksToFirebase();
+    }
+  }
+
+  async function deleteArtwork(id) {
+    artworks = artworks.filter(a => a.id !== id);
+    saveToLocalStorage(STORAGE_KEYS.ARTWORKS, artworks);
+    renderGallery();
+    updateSyncStatus('🗑️ Dihapus');
+    
+    if (firebaseAvailable && !id.startsWith('local_')) {
+      try {
+        await db.collection('artworks').doc(id).delete();
+      } catch (e) {
+        console.error('Delete from Firebase failed:', e);
+      }
+    }
+  }
+
+  async function saveTestimonial(testimonialData) {
+    const newTestimonial = {
+      id: testimonialData.id || 'local_' + Date.now(),
+      name: testimonialData.name,
+      role: testimonialData.role || "Pengunjung Galeri",
+      text: testimonialData.text
+    };
+    
+    if (testimonialData.id && !testimonialData.id.startsWith('local_')) {
+      const index = testimonials.findIndex(t => t.id === testimonialData.id);
+      if (index !== -1) {
+        testimonials[index] = newTestimonial;
+      } else {
+        testimonials.unshift(newTestimonial);
+      }
+    } else {
+      testimonials.unshift(newTestimonial);
+    }
+    
+    saveToLocalStorage(STORAGE_KEYS.TESTIMONIALS, testimonials);
+    initCarousel();
+    updateSyncStatus('💾 Testimoni tersimpan');
+    
+    if (firebaseAvailable) {
+      await syncTestimonialsToFirebase();
+    }
+  }
+
+  async function deleteTestimonial(id) {
+    testimonials = testimonials.filter(t => t.id !== id);
+    saveToLocalStorage(STORAGE_KEYS.TESTIMONIALS, testimonials);
+    initCarousel();
+    updateSyncStatus('🗑️ Testimoni dihapus');
+    
+    if (firebaseAvailable && !id.startsWith('local_')) {
+      try {
+        await db.collection('testimonials').doc(id).delete();
+      } catch (e) {
+        console.error('Delete testimonial from Firebase failed:', e);
+      }
+    }
+  }
+
+  async function saveContactField(field, value) {
+    const elements = {
+      address: document.getElementById('addressText'),
+      instagram: document.getElementById('instagramText'),
+      whatsapp: document.getElementById('whatsappText'),
+      hours: document.getElementById('hoursText')
+    };
+    
+    if (elements[field]) elements[field].innerText = value;
+    if (field === 'whatsapp') updateWhatsAppLinks(value);
+    
+    const contactInfo = {
+      address: document.getElementById('addressText').innerText,
+      instagram: document.getElementById('instagramText').innerText,
+      whatsapp: document.getElementById('whatsappText').innerText,
+      hours: document.getElementById('hoursText').innerText
+    };
+    saveToLocalStorage(STORAGE_KEYS.CONTACT_INFO, contactInfo);
+    updateSyncStatus('💾 Info kontak tersimpan');
+    
+    if (firebaseAvailable) {
+      await syncContactInfoToFirebase();
+    }
+  }
+
+  async function saveArtistPhotoToStorage(imageFile) {
+    let photoUrl = null;
+    
+    if (firebaseAvailable) {
+      try {
+        const storageRef = storage.ref(`artist/profile_${Date.now()}.jpg`);
+        await storageRef.put(imageFile);
+        photoUrl = await storageRef.getDownloadURL();
+        await syncArtistPhotoToFirebase(photoUrl);
+      } catch (e) {
+        console.warn('Firebase upload failed:', e);
+      }
+    }
+    
+    if (!photoUrl) {
+      const reader = new FileReader();
+      photoUrl = await new Promise((resolve) => {
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(imageFile);
+      });
+      saveToLocalStorage(STORAGE_KEYS.ARTIST_PHOTO, photoUrl);
+    }
+    
+    const artistIconDiv = document.querySelector("#artistIconDiv");
+    if (artistIconDiv) {
+      artistIconDiv.innerHTML = `<img src="${photoUrl}" alt="Hayyin" style="display: block; width: 100%; height: 100%; object-fit: cover;">`;
+    }
+    updateSyncStatus('📸 Foto profil diperbarui');
+  }
+
+  // ==================== UI FUNCTIONS ====================
+  function updateWhatsAppLinks(phoneNumber) {
+    const cleanNumber = phoneNumber.replace(/[^0-9+]/g, '');
+    const modalBtn = document.getElementById('modalInquiryBtn');
+    if (modalBtn && currentModalArt) {
+      modalBtn.onclick = () => {
+        window.open(`https://wa.me/${cleanNumber}?text=Halo%20Hayyin's%20Art,%20saya%20tertarik%20dengan%20karya%20"${encodeURIComponent(currentModalArt.title)}"%20oleh%20${encodeURIComponent(currentModalArt.artist)}.%20Mohon%20informasi%20lebih%20lanjut.`, '_blank');
+      };
+    }
+  }
+
+  function updateAuthUI() {
+    if (isLoggedIn) {
+      document.getElementById('ownerLoginBtn').classList.add('hidden');
+      document.getElementById('ownerLogoutBtn').classList.remove('hidden');
+      document.getElementById('adminIcon').classList.remove('hidden');
+    } else {
+      document.getElementById('ownerLoginBtn').classList.remove('hidden');
+      document.getElementById('ownerLogoutBtn').classList.add('hidden');
+      document.getElementById('adminIcon').classList.add('hidden');
+    }
+    updateEditIconsVisibility();
+    updateArtistIconEditable();
+    renderGallery();
+    initCarousel();
+  }
+
+  function updateEditIconsVisibility() {
+    const editIconsList = ['editAddressIcon', 'editInstagramIcon', 'editWhatsappIcon', 'editHoursIcon'];
+    editIconsList.forEach(id => {
+      const icon = document.getElementById(id);
+      if (icon) icon.classList.toggle('visible', isLoggedIn);
+    });
+  }
+
+  function updateArtistIconEditable() {
+    const artistIconDiv = document.querySelector(".artist-icon");
+    if (artistIconDiv) artistIconDiv.classList.toggle('editable', isLoggedIn);
+  }
+
+  function logout() {
+    isLoggedIn = false;
+    updateAuthUI();
+  }
+
+  function openEditModal(field) {
+    if (!isLoggedIn) return;
+    currentEditField = field;
+    let currentValue = "";
+    let title = "";
+    switch(field) {
+      case 'address':
+        currentValue = document.getElementById("addressText").innerText;
+        title = "Edit Alamat Galeri";
+        break;
+      case 'instagram':
+        currentValue = document.getElementById("instagramText").innerText;
+        title = "Edit Username Instagram";
+        break;
+      case 'whatsapp':
+        currentValue = document.getElementById("whatsappText").innerText;
+        title = "Edit Nomor WhatsApp";
+        break;
+      case 'hours':
+        currentValue = document.getElementById("hoursText").innerText;
+        title = "Edit Jam Operasional";
+        break;
+    }
+    document.getElementById('editModalTitle').innerText = title;
+    document.getElementById('editInput').value = currentValue;
+    document.getElementById('editModal').style.display = "flex";
+    document.body.classList.add("modal-open");
+  }
+
+  async function saveEdit() {
+    const newValue = document.getElementById('editInput').value.trim();
+    if (!newValue) return;
+    await saveContactField(currentEditField, newValue);
+    closeModal(document.getElementById('editModal'));
+  }
+
+  function uploadArtistPhoto() {
+    if (!isLoggedIn) return;
+    document.getElementById('photoUpload').click();
+  }
+
+  document.getElementById('photoUpload').addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      await saveArtistPhotoToStorage(file);
+    }
+  });
+
+  function openAdminModal() {
+    if (!isLoggedIn) return;
+    document.getElementById('karyaFormContainer').classList.add('hidden');
+    document.getElementById('komentarFormContainer').classList.add('hidden');
+    document.getElementById('adminModal').style.display = "flex";
+    document.body.classList.add("modal-open");
+    document.getElementById('manageKaryaBtn').classList.remove('active');
+    document.getElementById('manageKomentarBtn').classList.remove('active');
+  }
+
+  function closeAllDropdowns() {
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+  }
+
+  function renderGallery() {
+    const grid = document.getElementById("galleryGrid");
+    let filtered = activeFilter === "all" ? artworks : artworks.filter(a => a.category === activeFilter);
+    grid.innerHTML = "";
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-gallery"><i class="fas fa-palette"></i><p>Belum ada karya yang ditambahkan</p></div>`;
+      return;
+    }
+
+    filtered.forEach((art) => {
+      const card = document.createElement("div");
+      card.className = "art-card animate-item";
+      card.setAttribute("data-animation", "scale-up");
+      card.setAttribute("data-delay", "0.05");
+      card.setAttribute("data-id", art.id);
+      const imgSrc = art.imageUrl || '';
+      card.innerHTML = `
+        <div class="image-container">
+          ${imgSrc ? `<img class="art-img" src="${imgSrc}" alt="${art.title}" loading="lazy">` : '<div style="background: #000; min-height: 200px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.9rem;">No Image</div>'}
+        </div>
+        <div class="card-info">
+          <div class="card-menu" style="display: ${isLoggedIn ? 'flex' : 'none'};">
+            <span class="material-symbols-outlined">more_vert</span>
+          </div>
+          <div class="dropdown-menu">
+            <button class="edit-btn" data-id="${art.id}"><i class="fas fa-edit"></i> Edit Karya</button>
+            <button class="delete-btn" data-id="${art.id}"><i class="fas fa-trash-alt"></i> Hapus Karya</button>
+          </div>
+          <h3>${art.title}</h3>
+          <div class="artist">${art.artist} · ${art.category === 'digital' ? 'Digital' : 'Tradisional'}</div>
+          <p style="font-size:0.85rem;">${art.desc.substring(0, 65)}...</p>
+          <button class="view-details" data-id="${art.id}">Lihat detail <i class="fas fa-chevron-right"></i></button>
+        </div>
+      `;
+      grid.appendChild(card);
+
+      const menuBtn = card.querySelector('.card-menu');
+      if (menuBtn) {
+        menuBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const dropdown = card.querySelector('.dropdown-menu');
+          if (dropdown) {
+            const isVisible = dropdown.style.display === 'flex';
+            closeAllDropdowns();
+            dropdown.style.display = isVisible ? 'none' : 'flex';
+          }
+        });
+      }
+    });
+    attachCardEvents();
+    observeAnimateItems();
+  }
+
+  function attachCardEvents() {
+    document.querySelectorAll(".art-card").forEach(card => {
+      const btn = card.querySelector(".view-details");
+      const id = card.getAttribute("data-id");
+      btn.addEventListener("click", (e) => { e.stopPropagation(); openModalById(id); });
+      card.addEventListener("click", () => openModalById(id));
+    });
+  }
+
+  function openModalById(id) {
+    const art = artworks.find(a => a.id === id);
+    currentModalArt = art;
+    const whatsappNumber = document.getElementById("whatsappText").innerText;
+    const cleanNumber = whatsappNumber.replace(/[^0-9+]/g, '');
+    document.getElementById("modalImage").src = art.imageUrl || '';
+    document.getElementById("modalTitle").innerText = art.title;
+    document.getElementById("modalArtist").innerHTML = `${art.artist} • ${art.category === 'digital' ? 'Digital' : 'Tradisional'}`;
+    document.getElementById("modalDesc").innerText = art.desc;
+    document.getElementById("artModal").style.display = "flex";
+    document.getElementById("modalInquiryBtn").onclick = () => {
+      window.open(`https://wa.me/${cleanNumber}?text=Halo%20Hayyin's%20Art,%20saya%20tertarik%20dengan%20karya%20"${encodeURIComponent(art.title)}"%20oleh%20${encodeURIComponent(art.artist)}.%20Mohon%20informasi%20lebih%20lanjut.`, '_blank');
+    };
+  }
+
+  function renderArtists() {
+    const container = document.getElementById("artistCards");
+    container.innerHTML = "";
+    const card = document.createElement("div");
+    card.className = "artist-card animate-item";
+    card.setAttribute("data-animation", "zoom-in");
+    card.setAttribute("data-delay", "0.1");
+    card.onclick = () => { if (isLoggedIn) uploadArtistPhoto(); };
+    card.innerHTML = `
+      <div class="artist-icon ${isLoggedIn ? 'editable' : ''}" id="artistIconDiv">
+        <i class="fas fa-user-circle"></i>
+      </div>
+      <h4>Hayyin</h4>
+      <p>Founder & Ilustrator Utama</p>
+    `;
+    container.appendChild(card);
+    loadArtistPhoto();
+  }
+
+  function initCarousel() {
+    const track = document.getElementById("carouselTrack");
+    const testimonialsSection = document.getElementById("testimonialsSection");
+    if (!track || !testimonialsSection) return;
+
+    if (testimonials.length === 0) {
+      testimonialsSection.style.display = "none";
+      return;
+    }
+
+    testimonialsSection.style.display = "block";
+    track.innerHTML = "";
+    testimonials.forEach((t) => {
+      const card = document.createElement("div");
+      card.className = "testimonial-card";
+      card.innerHTML = `
+        <div class="card-menu" style="display: ${isLoggedIn ? 'flex' : 'none'};">
+          <span class="material-symbols-outlined">more_vert</span>
+        </div>
+        <div class="dropdown-menu">
+          <button class="edit-btn" data-id="${t.id}"><i class="fas fa-edit"></i> Edit Testimoni</button>
+          <button class="delete-btn" data-id="${t.id}"><i class="fas fa-trash-alt"></i> Hapus Testimoni</button>
+        </div>
+        <i class="fas fa-quote-left"></i><p>"${t.text}"</p><h4>${t.name}</h4><div class="role">${t.role}</div>`;
+      track.appendChild(card);
+
+      const menuBtn = card.querySelector('.card-menu');
+      if (menuBtn) {
+        menuBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const dropdown = card.querySelector('.dropdown-menu');
+          if (dropdown) {
+            const isVisible = dropdown.style.display === 'flex';
+            closeAllDropdowns();
+            dropdown.style.display = isVisible ? 'none' : 'flex';
+          }
+        });
+      }
+    });
+
+    setTimeout(() => {
+      const trackWidth = track.scrollWidth;
+      const container = document.getElementById("carouselContainer");
+      const containerWidth = container.clientWidth;
+      track.classList.remove('animate');
+      
+      if (trackWidth > containerWidth) {
+        const originalCards = [...track.children];
+        originalCards.forEach(card => track.appendChild(card.cloneNode(true)));
+        track.classList.add('animate');
+      } else {
+        track.style.justifyContent = 'center';
+        track.style.width = '100%';
+      }
+    }, 100);
+  }
+
+  function observeAnimateItems() {
+    const items = document.querySelectorAll(".animate-item");
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const animation = el.getAttribute("data-animation") || "fade-up";
+          const delay = parseFloat(el.getAttribute("data-delay")) || 0;
+          el.style.animationDelay = `${delay}s`;
+          el.classList.add(animation);
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.15 });
+    items.forEach(item => observer.observe(item));
+  }
+
+  function closeModal(modal) { 
+    if (modal) {
+      modal.style.display = "none"; 
+      document.body.classList.remove("modal-open");
+    }
+  }
+
+  function openModal(modal) { 
+    if (modal) {
+      modal.style.display = "flex"; 
+      document.body.classList.add("modal-open");
+    }
+  }
+
+  // ==================== EVENT LISTENERS ====================
+  document.getElementById('editAddressIcon')?.addEventListener('click', () => openEditModal('address'));
+  document.getElementById('editInstagramIcon')?.addEventListener('click', () => openEditModal('instagram'));
+  document.getElementById('editWhatsappIcon')?.addEventListener('click', () => openEditModal('whatsapp'));
+  document.getElementById('editHoursIcon')?.addEventListener('click', () => openEditModal('hours'));
+  document.getElementById('adminIcon')?.addEventListener('click', () => { if (isLoggedIn) openAdminModal(); });
+  document.getElementById('ownerLogoutBtn')?.addEventListener('click', () => { logout(); });
+  document.getElementById('uploadArtworkBtn')?.addEventListener('click', () => document.getElementById('artworkImageUpload').click());
+  
+  document.getElementById('artworkImageUpload')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        pendingImageData = event.target.result;
+        pendingImageFile = file;
+        const preview = document.getElementById('imagePreview');
+        const container = document.getElementById('imagePreviewContainer');
+        preview.src = pendingImageData;
+        container.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // TAMBAH KARYA - Modal akan tertutup setelah sukses
+  document.getElementById('submitKaryaBtn')?.addEventListener('click', async () => {
+    const title = document.getElementById('newTitle').value.trim();
+    const artist = document.getElementById('newArtist').value.trim();
+    const category = document.getElementById('newCategory').value;
+    const desc = document.getElementById('newDesc').value.trim();
+    if (!title || !artist || !desc) return;
+    
+    await saveArtwork({ title, artist, category, desc }, pendingImageFile);
+    
+    // Reset form
+    document.getElementById('newTitle').value = '';
+    document.getElementById('newArtist').value = '';
+    document.getElementById('newDesc').value = '';
+    pendingImageData = null;
+    pendingImageFile = null;
+    document.getElementById('imagePreviewContainer').classList.add('hidden');
+    document.getElementById('karyaFormContainer').classList.add('hidden');
+    document.getElementById('manageKaryaBtn').classList.remove('active');
+    
+    // TUTUP MODAL ADMIN
+    closeModal(document.getElementById('adminModal'));
+  });
+
+  // TAMBAH TESTIMONI - Modal akan tertutup setelah sukses
+  document.getElementById('submitKomentarBtn')?.addEventListener('click', async () => {
+    const comment = document.getElementById('newComment').value.trim();
+    const author = document.getElementById('commentAuthor').value.trim();
+    const status = document.getElementById('commentStatus').value.trim();
+    if (!comment || !author) return;
+    
+    await saveTestimonial({ name: author, role: status || "Pengunjung Galeri", text: comment });
+    
+    // Reset form
+    document.getElementById('newComment').value = '';
+    document.getElementById('commentAuthor').value = '';
+    document.getElementById('commentStatus').value = '';
+    document.getElementById('komentarFormContainer').classList.add('hidden');
+    document.getElementById('manageKomentarBtn').classList.remove('active');
+    
+    // TUTUP MODAL ADMIN
+    closeModal(document.getElementById('adminModal'));
+  });
+
+  // EDIT KARYA - Modal akan tertutup setelah sukses
+  document.getElementById('saveEditKaryaBtn')?.addEventListener('click', async () => {
+    if (currentEditingArtId === null) return;
+    const title = document.getElementById('editKaryaTitleInput').value.trim();
+    const artist = document.getElementById('editKaryaArtistInput').value.trim();
+    const category = document.getElementById('editKaryaCategoryInput').value;
+    const desc = document.getElementById('editKaryaDescInput').value.trim();
+    if (!title || !artist || !desc) return;
+    
+    await saveArtwork({ id: currentEditingArtId, title, artist, category, desc }, null);
+    
+    // TUTUP MODAL EDIT KARYA
+    closeModal(document.getElementById('editKaryaModal'));
+    currentEditingArtId = null;
+  });
+
+  // EDIT TESTIMONI - Modal akan tertutup setelah sukses
+  document.getElementById('saveEditTestimonialBtn')?.addEventListener('click', async () => {
+    if (currentEditingTestimonialId === null) return;
+    const text = document.getElementById('editTestimonialTextInput').value.trim();
+    const name = document.getElementById('editTestimonialNameInput').value.trim();
+    const role = document.getElementById('editTestimonialRoleInput').value.trim();
+    if (!text || !name) return;
+    
+    await saveTestimonial({ id: currentEditingTestimonialId, name, text, role });
+    
+    // TUTUP MODAL EDIT TESTIMONI
+    closeModal(document.getElementById('editTestimonialModal'));
+    currentEditingTestimonialId = null;
+  });
+
+  document.getElementById('saveEditBtn')?.addEventListener('click', saveEdit);
+  document.getElementById('submitLogin')?.addEventListener('click', () => {
+    const user = document.getElementById('loginUser').value;
+    const pass = document.getElementById('loginPass').value;
+    if (user === "admin" && pass === "hayyin2025") {
+      isLoggedIn = true;
+      updateAuthUI();
+      closeModal(document.getElementById('loginModal'));
+    }
+  });
+
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeFilter = btn.getAttribute("data-filter");
+      renderGallery();
+    });
+  });
+
+  document.getElementById('contactForm')?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    e.target.reset();
+  });
+
+  // Setup menu and modals
+  document.querySelectorAll(".close-modal").forEach(btn => {
+    btn.addEventListener("click", () => {
+      closeModal(document.getElementById('artModal'));
+      closeModal(document.getElementById('loginModal'));
+      closeModal(document.getElementById('adminModal'));
+      closeModal(document.getElementById('editModal'));
+      closeModal(document.getElementById('editKaryaModal'));
+      closeModal(document.getElementById('editTestimonialModal'));
+      currentEditingArtId = null;
+      currentEditingTestimonialId = null;
+    });
+  });
+
+  window.addEventListener("click", (e) => {
+    if (e.target === document.getElementById('artModal')) closeModal(document.getElementById('artModal'));
+    if (e.target === document.getElementById('loginModal')) closeModal(document.getElementById('loginModal'));
+    if (e.target === document.getElementById('adminModal')) closeModal(document.getElementById('adminModal'));
+    if (e.target === document.getElementById('editModal')) closeModal(document.getElementById('editModal'));
+    if (e.target === document.getElementById('editKaryaModal')) { closeModal(document.getElementById('editKaryaModal')); currentEditingArtId = null; }
+    if (e.target === document.getElementById('editTestimonialModal')) { closeModal(document.getElementById('editTestimonialModal')); currentEditingTestimonialId = null; }
+  });
+
+  document.getElementById('ownerLoginBtn')?.addEventListener("click", () => openModal(document.getElementById('loginModal')));
+  document.getElementById('closeAdminModal')?.addEventListener("click", () => closeModal(document.getElementById('adminModal')));
+  document.getElementById('closeEditModal')?.addEventListener("click", () => closeModal(document.getElementById('editModal')));
+  document.getElementById('closeLoginModal')?.addEventListener("click", () => closeModal(document.getElementById('loginModal')));
+  document.getElementById('closeEditKaryaModal')?.addEventListener("click", () => { closeModal(document.getElementById('editKaryaModal')); currentEditingArtId = null; });
+  document.getElementById('closeEditTestimonialModal')?.addEventListener("click", () => { closeModal(document.getElementById('editTestimonialModal')); currentEditingTestimonialId = null; });
+
+  document.getElementById('manageKaryaBtn')?.addEventListener('click', () => {
+    document.getElementById('manageKaryaBtn').classList.add('active');
+    document.getElementById('manageKomentarBtn').classList.remove('active');
+    document.getElementById('karyaFormContainer').classList.remove('hidden');
+    document.getElementById('komentarFormContainer').classList.add('hidden');
+  });
+
+  document.getElementById('manageKomentarBtn')?.addEventListener('click', () => {
+    document.getElementById('manageKomentarBtn').classList.add('active');
+    document.getElementById('manageKaryaBtn').classList.remove('active');
+    document.getElementById('komentarFormContainer').classList.remove('hidden');
+    document.getElementById('karyaFormContainer').classList.add('hidden');
+  });
+
+  // Delete/Edit handlers
+  document.addEventListener('click', async (e) => {
+    if (e.target.closest('.delete-btn')) {
+      e.stopImmediatePropagation();
+      const btn = e.target.closest('.delete-btn');
+      const dropdown = btn.closest('.dropdown-menu');
+      if (dropdown) dropdown.style.display = 'none';
+      const id = btn.dataset.id;
+      if (id && artworks.some(a => a.id === id)) {
+        await deleteArtwork(id);
+      } else if (id && testimonials.some(t => t.id === id)) {
+        await deleteTestimonial(id);
+      }
+      return;
+    }
+
+    if (e.target.closest('.edit-btn')) {
+      e.stopImmediatePropagation();
+      const btn = e.target.closest('.edit-btn');
+      const dropdown = btn.closest('.dropdown-menu');
+      if (dropdown) dropdown.style.display = 'none';
+      const id = btn.dataset.id;
+      
+      const artwork = artworks.find(a => a.id === id);
+      if (artwork) {
+        currentEditingArtId = id;
+        document.getElementById('editKaryaTitleInput').value = artwork.title || '';
+        document.getElementById('editKaryaArtistInput').value = artwork.artist || '';
+        document.getElementById('editKaryaCategoryInput').value = artwork.category || 'digital';
+        document.getElementById('editKaryaDescInput').value = artwork.desc || '';
+        openModal(document.getElementById('editKaryaModal'));
+      }
+      
+      const testimonial = testimonials.find(t => t.id === id);
+      if (testimonial) {
+        currentEditingTestimonialId = id;
+        document.getElementById('editTestimonialTextInput').value = testimonial.text || '';
+        document.getElementById('editTestimonialNameInput').value = testimonial.name || '';
+        document.getElementById('editTestimonialRoleInput').value = testimonial.role || '';
+        openModal(document.getElementById('editTestimonialModal'));
+      }
+    }
+  });
+
+  // Mobile menu
+  const menuToggleBtn = document.getElementById('menuToggle');
+  const navLinksEl = document.getElementById('navLinks');
+  const menuOverlayEl = document.getElementById('menuOverlay');
+  const menuCloseBtnEl = document.getElementById('menuCloseBtn');
+
+  function closeMobileMenu() {
+    navLinksEl?.classList.remove('active');
+    menuOverlayEl?.classList.remove('active');
+    document.body.classList.remove('menu-open');
+  }
+
+  function toggleMobileMenu() {
+    const isOpening = !navLinksEl?.classList.contains('active');
+    navLinksEl?.classList.toggle('active');
+    menuOverlayEl?.classList.toggle('active');
+    if (isOpening) document.body.classList.add('menu-open');
+    else document.body.classList.remove('menu-open');
+  }
+
+  menuToggleBtn?.addEventListener('click', toggleMobileMenu);
+  menuOverlayEl?.addEventListener('click', closeMobileMenu);
+  menuCloseBtnEl?.addEventListener('click', closeMobileMenu);
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => { if (window.innerWidth <= 768) closeMobileMenu(); });
+  });
+
+  // Back to top
+  const backToTopBtn = document.getElementById('backToTopBtn');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) backToTopBtn?.classList.add('show');
+    else backToTopBtn?.classList.remove('show');
+  });
+  backToTopBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  // Header scroll effect
+  const header = document.getElementById('mainHeader');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) header?.classList.add('scrolled');
+    else header?.classList.remove('scrolled');
+  });
+
+  // Smooth scroll for nav links
+  document.querySelectorAll('.nav-link').forEach(anchor => {
+    anchor.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetId = anchor.getAttribute('href').substring(1);
+      const target = document.getElementById(targetId);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // Active nav on scroll
+  const sections = document.querySelectorAll('section, #gallery');
+  const navLinkItems = document.querySelectorAll('.nav-link');
+  window.addEventListener('scroll', () => {
+    let scrollPos = window.scrollY + 120;
+    sections.forEach(section => {
+      const top = section.offsetTop, bottom = top + section.offsetHeight;
+      if (scrollPos >= top && scrollPos < bottom) {
+        const id = section.getAttribute('id');
+        navLinkItems.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${id}`) link.classList.add('active');
+        });
+      }
+    });
+  });
+
+  // Initialize
+  async function init() {
+    renderArtists();
+    await Promise.all([
+      loadArtworks(),
+      loadTestimonials(),
+      loadContactInfo()
+    ]);
+    observeAnimateItems();
+    setTimeout(() => {
+      observeAnimateItems();
+      initCarousel();
+    }, 200);
+    updateAuthUI();
+    updateWhatsAppLinks(document.getElementById("whatsappText").innerText);
+    updateSyncStatus('💾 Siap');
+  }
+
+  init();
+
+  window.addEventListener('resize', () => {
+    if (testimonials.length > 0) initCarousel();
+  });
+</script>
+</body>
+</html>
